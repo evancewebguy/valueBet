@@ -1,0 +1,42 @@
+<.header>
+  Listing Competitions
+  <:actions>
+    <.link patch={~p"/competitions/new"}>
+      <.button>New Competition</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<.table
+  id="competitions"
+  rows={@streams.competitions}
+  row_click={fn {_id, competition} -> JS.navigate(~p"/competitions/#{competition}") end}
+>
+  <:col :let={{_id, competition}} label="Name">{competition.name}</:col>
+  <:col :let={{_id, competition}} label="Code">{competition.code}</:col>
+  <:action :let={{_id, competition}}>
+    <div class="sr-only">
+      <.link navigate={~p"/competitions/#{competition}"}>Show</.link>
+    </div>
+    <.link patch={~p"/competitions/#{competition}/edit"}>Edit</.link>
+  </:action>
+  <:action :let={{id, competition}}>
+    <.link
+      phx-click={JS.push("delete", value: %{id: competition.id}) |> hide("##{id}")}
+      data-confirm="Are you sure?"
+    >
+      Delete
+    </.link>
+  </:action>
+</.table>
+
+<.modal :if={@live_action in [:new, :edit]} id="competition-modal" show on_cancel={JS.patch(~p"/competitions")}>
+  <.live_component
+    module={ValueBetWeb.CompetitionLive.FormComponent}
+    id={@competition.id || :new}
+    title={@page_title}
+    action={@live_action}
+    competition={@competition}
+    patch={~p"/competitions"}
+  />
+</.modal>

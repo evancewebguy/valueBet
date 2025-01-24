@@ -1,0 +1,41 @@
+<.header>
+  Listing Leagues
+  <:actions>
+    <.link patch={~p"/leagues/new"}>
+      <.button>New League</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<.table
+  id="leagues"
+  rows={@streams.leagues}
+  row_click={fn {_id, league} -> JS.navigate(~p"/leagues/#{league}") end}
+>
+  <:col :let={{_id, league}} label="Name">{league.name}</:col>
+  <:action :let={{_id, league}}>
+    <div class="sr-only">
+      <.link navigate={~p"/leagues/#{league}"}>Show</.link>
+    </div>
+    <.link patch={~p"/leagues/#{league}/edit"}>Edit</.link>
+  </:action>
+  <:action :let={{id, league}}>
+    <.link
+      phx-click={JS.push("delete", value: %{id: league.id}) |> hide("##{id}")}
+      data-confirm="Are you sure?"
+    >
+      Delete
+    </.link>
+  </:action>
+</.table>
+
+<.modal :if={@live_action in [:new, :edit]} id="league-modal" show on_cancel={JS.patch(~p"/leagues")}>
+  <.live_component
+    module={ValueBetWeb.LeagueLive.FormComponent}
+    id={@league.id || :new}
+    title={@page_title}
+    action={@live_action}
+    league={@league}
+    patch={~p"/leagues"}
+  />
+</.modal>

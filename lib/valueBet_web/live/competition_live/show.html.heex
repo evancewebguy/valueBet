@@ -1,0 +1,27 @@
+<.header>
+  Competition {@competition.id}
+  <:subtitle>This is a competition record from your database.</:subtitle>
+  <:actions>
+    <.link patch={~p"/competitions/#{@competition}/show/edit"} phx-click={JS.push_focus()}>
+      <.button>Edit competition</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<.list>
+  <:item title="Name">{@competition.name}</:item>
+  <:item title="Code">{@competition.code}</:item>
+</.list>
+
+<.back navigate={~p"/competitions"}>Back to competitions</.back>
+
+<.modal :if={@live_action == :edit} id="competition-modal" show on_cancel={JS.patch(~p"/competitions/#{@competition}")}>
+  <.live_component
+    module={ValueBetWeb.CompetitionLive.FormComponent}
+    id={@competition.id}
+    title={@page_title}
+    action={@live_action}
+    competition={@competition}
+    patch={~p"/competitions/#{@competition}"}
+  />
+</.modal>

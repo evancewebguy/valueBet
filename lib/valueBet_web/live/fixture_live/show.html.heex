@@ -1,0 +1,30 @@
+<.header>
+  Fixture {@fixture.id}
+  <:subtitle>This is a fixture record from your database.</:subtitle>
+  <:actions>
+    <.link patch={~p"/fixtures/#{@fixture}/show/edit"} phx-click={JS.push_focus()}>
+      <.button>Edit fixture</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<.list>
+  <:item title="Fixture date">{@fixture.fixture_date}</:item>
+  <:item title="Odds home win">{@fixture.odds_home_win}</:item>
+  <:item title="Odds away win">{@fixture.odds_away_win}</:item>
+  <:item title="Odds draw">{@fixture.odds_draw}</:item>
+  <:item title="Status">{@fixture.status}</:item>
+</.list>
+
+<.back navigate={~p"/fixtures"}>Back to fixtures</.back>
+
+<.modal :if={@live_action == :edit} id="fixture-modal" show on_cancel={JS.patch(~p"/fixtures/#{@fixture}")}>
+  <.live_component
+    module={ValueBetWeb.FixtureLive.FormComponent}
+    id={@fixture.id}
+    title={@page_title}
+    action={@live_action}
+    fixture={@fixture}
+    patch={~p"/fixtures/#{@fixture}"}
+  />
+</.modal>

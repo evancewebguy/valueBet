@@ -1,0 +1,26 @@
+<.header>
+  League {@league.id}
+  <:subtitle>This is a league record from your database.</:subtitle>
+  <:actions>
+    <.link patch={~p"/leagues/#{@league}/show/edit"} phx-click={JS.push_focus()}>
+      <.button>Edit league</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<.list>
+  <:item title="Name">{@league.name}</:item>
+</.list>
+
+<.back navigate={~p"/leagues"}>Back to leagues</.back>
+
+<.modal :if={@live_action == :edit} id="league-modal" show on_cancel={JS.patch(~p"/leagues/#{@league}")}>
+  <.live_component
+    module={ValueBetWeb.LeagueLive.FormComponent}
+    id={@league.id}
+    title={@page_title}
+    action={@live_action}
+    league={@league}
+    patch={~p"/leagues/#{@league}"}
+  />
+</.modal>

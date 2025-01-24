@@ -1,0 +1,47 @@
+<.header>
+  Listing Bets
+  <:actions>
+    <.link patch={~p"/bets/new"}>
+      <.button>New Bet</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<.table
+  id="bets"
+  rows={@streams.bets}
+  row_click={fn {_id, bet} -> JS.navigate(~p"/bets/#{bet}") end}
+>
+  <:col :let={{_id, bet}} label="Fixture">{bet.fixture}</:col>
+  <:col :let={{_id, bet}} label="Odds">{bet.odds}</:col>
+  <:col :let={{_id, bet}} label="Selection">{bet.selection}</:col>
+  <:col :let={{_id, bet}} label="Winner">{bet.winner}</:col>
+  <:col :let={{_id, bet}} label="User">{bet.user_id}</:col>
+  <:col :let={{_id, bet}} label="Inserted at">{bet.inserted_at}</:col>
+  <:col :let={{_id, bet}} label="Result">{bet.result}</:col>
+  <:action :let={{_id, bet}}>
+    <div class="sr-only">
+      <.link navigate={~p"/bets/#{bet}"}>Show</.link>
+    </div>
+    <.link patch={~p"/bets/#{bet}/edit"}>Edit</.link>
+  </:action>
+  <:action :let={{id, bet}}>
+    <.link
+      phx-click={JS.push("delete", value: %{id: bet.id}) |> hide("##{id}")}
+      data-confirm="Are you sure?"
+    >
+      Delete
+    </.link>
+  </:action>
+</.table>
+
+<.modal :if={@live_action in [:new, :edit]} id="bet-modal" show on_cancel={JS.patch(~p"/bets")}>
+  <.live_component
+    module={ValueBetWeb.BetLive.FormComponent}
+    id={@bet.id || :new}
+    title={@page_title}
+    action={@live_action}
+    bet={@bet}
+    patch={~p"/bets"}
+  />
+</.modal>
