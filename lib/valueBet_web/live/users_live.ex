@@ -6,11 +6,74 @@ defmodule ValueBetWeb.UsersLive do
   def render(assigns) do
     ~H"""
     <div class="mx-auto max-w-2xl">
-      <%= if @live_action == :view_permissions do %>
-        <h2 class="text-2xl font-semibold mb-4">User Permissions</h2>
-        <p class="mb-4">
-          Viewing permissions for <strong><%= "#{@user.first_name} #{@user.last_name}" %></strong>.
-        </p>
+      <%= if @live_action in [:view_permissions, :add_permissions] do %>
+        <h2 class="text-2xl font-semibold mb-4">
+          <%= if @live_action == :view_permissions, do: "User Permissions", else: "Add Permission" %> : <%= @user.first_name %> <%= @user.last_name %>
+        </h2>
+
+        <div>
+          <!-- Success Message -->
+          <%= if @success_message do %>
+            <div class="alert alert-success">
+              <%= @success_message %>
+            </div>
+          <% end %>
+
+          <!-- Error Message -->
+          <%= if @error_message do %>
+            <div class="alert alert-danger">
+              <%= @error_message %>
+            </div>
+          <% end %>
+        </div>
+         <%= if Enum.any?(@user_permissions, fn perm -> perm.name != "super admin" end) do %>
+          Show content for users who are not Super Admins
+
+        <% else %>
+                    Show Super Admin related content
+        <% end %>
+
+
+        <!-- Check if the user has the 'admin' role -->
+        <%= if Enum.any?(@user.user_roles, fn role -> role.role.name == "admin" end) do %>
+          <div class="mt-4">
+            <%= for permission <- @user_permissions do %>
+              <%= if permission["name"] != "super admin" do %>
+                <!-- If the permission is "super_admin", display it differently -->
+                  <button
+                    class="mb-1 bg-gray-400 text-white px-4 py-1 rounded hover:bg-gray-500"
+                    phx-click="make_super_admin"
+                    phx-value-user-id={@user.id}
+                  >
+                    Make <%= @user.first_name %> Super Admin
+                  </button>
+              <% else %>
+                  <button
+                    class="mb-1 bg-red-400 text-white px-4 py-1 rounded hover:bg-red-500"
+                    phx-click="remove_super_admin"
+                    phx-value-user-id={@user.id}
+                  >
+                    Remove <%= @user.first_name %> from Super Admin
+                  </button>
+              <% end %>
+            <% end %>
+          </div>
+        <% end %>
+
+
+        <%= if Enum.count(@user.user_roles) == 1 and Enum.any?(@user.user_roles, fn role -> role.role.name == "user" end) do %>
+          <div class="mt-4">
+            <button
+              class="mb-1 bg-gray-400 text-white px-4 py-1 rounded hover:bg-gray-500"
+              phx-click="make_admin"
+              phx-value-user-id={@user.id}
+            >
+              Make <%= @user.first_name %> Admin
+            </button>
+          </div>
+        <% end %>
+
+
 
         <table class="min-w-full bg-white border border-gray-200">
           <thead>
@@ -29,19 +92,8 @@ defmodule ValueBetWeb.UsersLive do
                       <%= for permission <- role.role.permissions do %>
                         <tr>
                           <td class="px-4 py-2 border-b"><%= permission.name %></td>
-                          <td class="px-4 py-2 border-b">
-                            <a href={~p"/users/#{@user.id}/remove"} class="text-blue-600 hover:underline">remove</a>
-                          </td>
                         </tr>
                       <% end %>
-
-                      <!-- Add row with dropdown for adding permission -->
-                      <tr>
-                        <td class="px-4 py-2 border-b">
-                            <a href={~p"/users/#{@user.id}/add"} class="text-blue-600 hover:underline">add permission</a>
-                        </td>
-                        <td class="px-4 py-2 border-b"></td>
-                      </tr>
                     </tbody>
                   </table>
                 </td>
@@ -49,6 +101,7 @@ defmodule ValueBetWeb.UsersLive do
             <% end %>
           </tbody>
         </table>
+
         <div class="mt-4">
           <a href={~p"/users/list"} class="text-blue-600 hover:underline">Back to Users</a>
         </div>
@@ -85,43 +138,92 @@ defmodule ValueBetWeb.UsersLive do
     """
   end
 
+
   def mount(_params, _session, socket) do
-    {:ok, assign(socket, users: [], user: nil, available_permissions: nil)}
+    available_permissions = Accounts.list_permissions()
+    user_permissions = nil
+
+    {:ok, assign(socket, users: [], user: nil, user_permissions: user_permissions, available_permissions: available_permissions, success_message: nil, error_message: nil)}
   end
 
 
   def handle_params(%{"id" => id}, _url, socket) do
     case socket.assigns.live_action do
-      :view_permissions ->
-        handle_view_permissions(id, socket)
-
-      :add_permissions ->
-        handle_add_permissions(id, socket)
-
-      _ ->
-        {:noreply, socket}
+      :view_permissions -> handle_permissions(id, socket)
+      :add_permissions -> handle_permissions(id, socket)
+      _ -> {:noreply, socket}
     end
   end
 
-  defp handle_view_permissions(id, socket) do
+  defp handle_permissions(id, socket) do
     case Accounts.get_user_with_roles_and_permissions(id) do
       nil ->
         {:noreply, push_navigate(socket, to: ~p"/users/list")}
 
       user ->
+         # Fetch available permissions
         available_permissions = Accounts.list_permissions()
-        {:noreply, assign(socket, user: user, available_permissions: available_permissions)}
+
+        # Get the user permissions
+        user_permissions = Accounts.get_user_with_permissions(id)
+
+       IO.inspect(is_list(user_permissions), label: "user_permissions")
+
+
+        {:noreply, assign(socket, user: user, available_permissions: available_permissions, user_permissions: user_permissions)}
     end
   end
 
-  defp handle_add_permissions(id, socket) do
-    case Accounts.get_user_with_roles_and_permissions(id) do
-      nil ->
-        {:noreply, push_navigate(socket, to: ~p"/users/list")}
 
-      user ->
-        available_permissions = Accounts.list_permissions()
-        {:noreply, assign(socket, user: user, available_permissions: available_permissions)}
+  def handle_event("make_admin", %{"user-id" => user_id}, socket) do
+    case Accounts.assign_role_to_user(user_id, 2) do
+      :ok ->
+        # IO.inspect(%{
+        #   user_id: user_id,
+        #   role: 2,
+        #   status: "success"
+        # }, label: "User promoted to admin")
+
+        {:noreply, assign(socket, :success_message, "User successfully promoted to admin!")}
+
+      {:error, reason} ->
+        {:noreply, assign(socket, :error_message, "Failed to make user admin: #{reason}")}
+    end
+  end
+
+
+
+  def handle_event("make_super_admin", %{"user-id" => user_id}, socket) do
+    #makes user a super admin
+    case Accounts.assign_permission_to_user(user_id, 1) do
+      :ok ->
+        IO.inspect(%{
+          user_id: user_id,
+          permission_id: 1,
+          status: "success"
+        }, label: "User promoted to super admin")
+
+        {:noreply, assign(socket, :success_message, "User successfully promoted to super admin!")}
+
+      {:error, reason} ->
+        IO.inspect(%{
+          user_id: user_id,
+          permission_id: 1,
+          status: "error",
+          reason: reason
+        }, label: "Failed to promote user to super admin")
+
+        {:noreply, assign(socket, :error_message, "Failed to make user super admin: #{reason}")}
+    end
+  end
+
+  def handle_event("remove_super_admin", %{"user-id" => user_id}, socket) do
+    case Accounts.remove_permission_from_user(user_id, 2) do
+      :ok ->
+        {:noreply, assign(socket, :success_message, "User successfully removed from super admin!")}
+
+      {:error, reason} ->
+        {:noreply, assign(socket, :error_message, "Failed to remove user from super admin: #{reason}")}
     end
   end
 

@@ -22,9 +22,7 @@ defmodule ValueBetWeb.Router do
 
     get "/", PageController, :home
 
-    # live "/", HomeLive
-    live "/bets", HomeLive
-
+    live "/games", HomeLive.Index, :index
 
   end
 
@@ -82,11 +80,11 @@ defmodule ValueBetWeb.Router do
       live "/users/:id/remove", UsersLive, :remove_permissions
 
       # bet
-      live "/mybets", HomeLive.Index, :index
+      # live "/mybets", HomeLive.Index, :index
 
 
       #games
-      live "/games", GamesLive
+      live "/gamesa", GamesLive
 
       #competition
       live "/competitions", CompetitionLive.Index, :index

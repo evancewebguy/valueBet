@@ -13,5 +13,7 @@ defmodule ValueBet.Accounts.UserRole do
     user_role
     |> cast(attrs, [:user_id, :role_id])
     |> validate_required([:user_id, :role_id])
+    |> foreign_key_constraint(:user_id)  # Ensure the user_id exists
+    |> foreign_key_constraint(:role_id)  # Ensure the role_id exists
   end
 end

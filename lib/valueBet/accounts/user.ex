@@ -14,6 +14,8 @@ defmodule ValueBet.Accounts.User do
     field :confirmed_at, :utc_datetime
 
     has_many :user_roles, ValueBet.Accounts.UserRole
+    has_many :user_permissions, ValueBet.Accounts.UserPermission
+    has_many :permissions, through: [:user_permissions, :permission]
 
     timestamps(type: :utc_datetime)
 

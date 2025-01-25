@@ -6,7 +6,7 @@ defmodule ValueBet.Accounts do
   import Ecto.Query, warn: false
   alias ValueBet.Repo
 
-  alias ValueBet.Accounts.{User, UserToken, UserNotifier, Permission, RolePermission, UserRole}
+  alias ValueBet.Accounts.{User, UserToken, UserNotifier, Permission, RolePermission, UserRole, UserPermission}
 
   ## Database getters
 
@@ -44,6 +44,49 @@ defmodule ValueBet.Accounts do
         preload: [user_roles: {ur, role: {r, permissions: p}}]
     )
   end
+
+
+  # //get only super admin users
+  def get_user_with_permissions(user_id) do
+    # Ensure user_id is an integer (use String.to_integer if needed)
+    user_id = String.to_integer(user_id)
+
+    sql = """
+    SELECT
+      u.id as user_id, u.first_name, u.last_name, up.*, p.*
+    FROM user_permissions up
+    JOIN users u ON u.id = up.user_id
+    JOIN permissions p ON p.id = up.permission_id
+    WHERE u.id = $1
+    """
+
+    # Execute the raw SQL query
+    case Repo.query(sql, [user_id]) do
+      {:ok, result} ->
+
+        # Map rows to key-value pairs using columns and rows
+        keys = result.columns
+        rows = Enum.map(result.rows, fn row ->
+          Enum.zip(keys, row)
+          |> Enum.into(%{})
+        end)
+
+        # Ensure the result is a list of maps and return {:ok, rows}
+        rows
+
+      {:error, reason} ->
+        # Return an error if query failed
+        {:error, reason}
+    end
+  end
+
+
+
+
+
+
+
+
 
 
   def list_users_with_roles do
@@ -118,6 +161,7 @@ defmodule ValueBet.Accounts do
   """
   def get_user_by_email(email) when is_binary(email) do
     Repo.get_by(User, email: email)
+    |> Repo.preload([:user_roles, :user_permissions])  # Preload both associations
   end
 
   @doc """
@@ -152,7 +196,13 @@ defmodule ValueBet.Accounts do
       ** (Ecto.NoResultsError)
 
   """
-  def get_user!(id), do: Repo.get!(User, id)
+  # def get_user!(id), do: Repo.get!(User, id)
+
+  def get_user(user_id) do
+    Repo.get(ValueBet.Accounts.User, user_id)
+    |> Repo.preload([:user_roles, user_roles: :role])  # Preload user_roles and the associated role
+  end
+
 
   ## User registration
 
@@ -187,6 +237,30 @@ defmodule ValueBet.Accounts do
     %UserRole{}
     |> UserRole.changeset(%{user_id: user_id, role_id: role_id})
     |> Repo.insert()
+  end
+
+  # //make user a super admin
+  def assign_permission_to_user(user_id, permission_id) do
+    %UserPermission{}
+    |> UserPermission.changeset(%{user_id: user_id, permission_id: permission_id})
+    |> Repo.insert()
+  end
+
+    # //remove user a super admin
+  def remove_permission_from_user(user_id, permission_id) do
+    case Repo.get_by(UserPermission, user_id: user_id, permission_id: permission_id) do
+      nil ->
+        {:error, "User does not have this permission"}
+
+      user_permission ->
+        Repo.delete(user_permission)
+        :ok
+    end
+  end
+
+  # Fetches the permissions for a specific user by user_id
+  def get_user_permission(user_id) do
+    Repo.all(from up in UserPermission, where: up.user_id == ^user_id)
   end
 
 
@@ -341,7 +415,9 @@ defmodule ValueBet.Accounts do
   """
   def get_user_by_session_token(token) do
     {:ok, query} = UserToken.verify_session_token_query(token)
-    Repo.one(query)
+    query
+    |> Repo.one()
+    |> Repo.preload([:user_roles, :user_permissions])  # Preload both associations
   end
 
   @doc """
