@@ -9,6 +9,7 @@ defmodule ValueBetWeb.PageController do
 
     current_user = conn.assigns[:current_user]
 
+    IO.inspect(current_user, label: "CURRENT USER")
 
     # so skip the default app layout.
     fixtures = Enum.map(Fixtures.list_fixtures2(), fn fixture ->

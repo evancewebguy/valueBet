@@ -8,129 +8,31 @@ defmodule ValueBet.Bets do
 
   alias ValueBet.Bets.Bet
 
-  @doc """
-  Returns the list of bets.
 
-  ## Examples
+  # Fetch the bet by ID
+  bet = Repo.get!(Bet, bet_id)
 
-      iex> list_bets()
-      [%Bet{}, ...]
-
-  """
-  def list_bets do
-    Repo.all(Bet)
-  end
-
-  @doc """
-  Gets a single bet.
-
-  Raises `Ecto.NoResultsError` if the Bet does not exist.
-
-  ## Examples
-
-      iex> get_bet!(123)
-      %Bet{}
-
-      iex> get_bet!(456)
-      ** (Ecto.NoResultsError)
-
-  """
-  def get_bet!(id), do: Repo.get!(Bet, id)
-
-  @doc """
-  Creates a bet.
-
-  ## Examples
-
-      iex> create_bet(%{field: value})
-      {:ok, %Bet{}}
-
-      iex> create_bet(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
-  def create_bet(attrs \\ %{}) do
-    %Bet{}
-    |> Bet.changeset(attrs)
-    |> Repo.insert()
-  end
-
-
-  
-
-
-  @doc """
-  Updates a bet.
-
-  ## Examples
-
-      iex> update_bet(bet, %{field: new_value})
-      {:ok, %Bet{}}
-
-      iex> update_bet(bet, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
-  def update_bet(%Bet{} = bet, attrs) do
+  # Update the actual_winner field with the event result
+  updated_bet =
     bet
-    |> Bet.changeset(attrs)
-    |> Repo.update()
-  end
+    |> Bet.changeset(%{actual_winner: "Arsenal"})
+    |> Repo.update!()
 
+  # Determine bet status and calculate winnings or losses
+  case Bet.determine_bet_status(updated_bet) do
+    %{bet_status: "won"} = bet ->
+      winnings = Bet.calculate_winnings(bet)
 
-  def save_bets(socket, bets) do
-    # Prepare the data for insertion
-    bets_data =
-      Enum.map(bets, fn bet ->
-        %{
-          fixture: bet[:fixture],
-          odds: Decimal.new(bet[:odds]), # Convert odds to a Decimal if necessary
-          selection: bet[:selection],
-          winner: bet[:winner],
-          inserted_at: NaiveDateTime.utc_now(), # Add timestamps
-          updated_at: NaiveDateTime.utc_now()
-        }
-      end)
+      # Credit user's wallet (pseudo-code)
+      Wallet.credit_user(bet.user_id, winnings)
 
-    # Insert the data into the bets table
-    case Repo.insert_all("bets", bets_data) do
-      {:ok, _} ->
-        IO.puts("Bets successfully saved.")
-        {:noreply, socket}
+      # Update the bet status to "won"
+      Repo.update!(Bet.changeset(bet, %{bet_status: "won"}))
 
-      {:error, reason} ->
-        IO.inspect(reason, label: "Failed to save bets")
-        {:noreply, socket}
-    end
-  end
+    %{bet_status: "lost"} = bet ->
+      loss = Bet.calculate_loss(bet)
 
-
-  @doc """
-  Deletes a bet.
-
-  ## Examples
-
-      iex> delete_bet(bet)
-      {:ok, %Bet{}}
-
-      iex> delete_bet(bet)
-      {:error, %Ecto.Changeset{}}
-
-  """
-  def delete_bet(%Bet{} = bet) do
-    Repo.delete(bet)
-  end
-
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking bet changes.
-
-  ## Examples
-
-      iex> change_bet(bet)
-      %Ecto.Changeset{data: %Bet{}}
-
-  """
-  def change_bet(%Bet{} = bet, attrs \\ %{}) do
-    Bet.changeset(bet, attrs)
+      # Update the bet status to "lost"
+      Repo.update!(Bet.changeset(bet, %{bet_status: "lost"}))
   end
 end

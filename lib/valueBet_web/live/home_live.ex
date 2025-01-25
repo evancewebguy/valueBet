@@ -159,9 +159,14 @@ defmodule ValueBetWeb.HomeLive.Index do
   end
 
   def handle_event("place_bet", _params, socket) do
-       # Extract required data
-       results = socket.assigns[:results]
-      #  userid = socket.assigns.current_user.id
+      # Extract required data
+      results = socket.assigns[:results]
+
+      # Retrieve current user from socket assigns
+      current_user = socket.assigns[:current_user]
+
+      # Debugging: Inspect current user
+      IO.inspect(current_user, label: "Current User")
 
       # user_id = 1
       # # Extract results from the socket

@@ -1,8 +1,7 @@
 <.flash_group flash={@flash} />
 
 
-
   <main>
-    <%= live_render(@conn, ValueBetWeb.HomeLive.Index, session: %{}) %>
+    <%= live_render(@conn, ValueBetWeb.HomeLive.Index, session: %{"current_user" => @current_user}) %>
   </main>
 
