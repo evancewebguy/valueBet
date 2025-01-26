@@ -43,6 +43,10 @@ defmodule ValueBetWeb.HomeLive.Index do
             </div>
         <% end %>
 
+        <%= @current_user.email  %>
+
+
+
         <div class="mt-2 mx-auto max-w-7xl px-4 py-3 bg-gray-300 flex">
           <div class="w-1/2 px-2"><p><strong>Teams</strong></p></div>
           <div class="w-1/2 px-2 flex">
@@ -116,12 +120,9 @@ defmodule ValueBetWeb.HomeLive.Index do
     """
   end
 
-  def mount(_params, _session, socket) do
+  def mount(_params, session, socket) do
 
-    current_user = socket.assigns[:current_user]
-
-    IO.inspect(current_user, label: "Current User HOMELIVE")
-
+    current_user = Map.get(session, "current_user", nil)
 
     fixtures = Enum.map(Fixtures.list_fixtures2(), fn fixture ->
       Map.put(fixture, :odds_home_win, Decimal.to_string(fixture.odds_home_win, :normal) |> String.slice(0..4))
@@ -132,7 +133,7 @@ defmodule ValueBetWeb.HomeLive.Index do
     total_odds = 0
 
     # Initialize results as an empty list
-    {:ok, assign(socket, current_user: nil, fixtures: fixtures, results: [], total_odds: total_odds)}
+    {:ok, assign(socket, current_user: current_user, fixtures: fixtures, results: [], total_odds: total_odds)}
   end
 
   def handle_event("add_to_results", %{"odds" => odds, "fixture" => fixture, "selection" => selection, "winner" => winner}, socket) do
@@ -171,37 +172,66 @@ defmodule ValueBetWeb.HomeLive.Index do
       current_user = socket.assigns[:current_user]
 
       # Debugging: Inspect current user
-      IO.inspect(current_user, label: "Current User")
+      IO.inspect(current_user.id, label: "Current User placebet")
 
-      # user_id = 1
       # # Extract results from the socket
-      # results = socket.assigns[:results]
+      # :bet_amount - amount placed
+      # :odds - this game odds
+      # :selection_choice - selected choice description e.g draw
+      # :selected_winner - id of team selected to win
+      # :actual_winner - the real winner id
+      # :bet_status - "pending" # e.g., "won", "lost","canceled", "pending"
+      # :bet_code - betslip code
+      # :user - user id
 
-      # Format the data for insertion into the database
+      now = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)  # Truncate microseconds
+      bet_code = generate_random_string()
+       # Format the data for insertion into the database
       bets = Enum.map(results, fn result ->
         %{
           fixture: result.fixture,
-          odds: Decimal.new(result.odds), # Convert odds back to Decimal
-          selection: result.selection,
-          winner: result.winner,
-          user_id: socket.assigns[:user_id], # Ensure user_id is assigned properly
-          result: "", # Default value for result
+          bet_amount: 100,
+          odds: Decimal.new(result.odds),
+          selection_choice: result.selection,
+          selected_winner: result.winner,
+          actual_winner: "",
+          bet_status: "pending",
+          bet_code: bet_code,
+          user_id: current_user.id,
+          inserted_at: now,  # Set inserted_at manually
+          updated_at: now   # Set updated_at manually
         }
       end)
 
-      # Bets.save_bets(socket, bets)
+      # Log the bets data for debugging
+      IO.inspect(bets, label: "Placed Bet Data")
 
+      # Save the bets, handle success and failure
+      case Bets.create_bets(bets) do
+        {:ok, _} ->
+          IO.puts("Bets successfully placed.")
+                # Add a flash message and push a patch to the current route (or new one)
+          socket =
+            socket
+            |> put_flash(:info, "Bet #{bet_code} placed successfully")
+            |> push_patch(to: socket.assigns.patch)
+        {:error, reason} ->
+          IO.puts("Failed to place bets: #{reason}")
+          # Optionally, add an error flash message
+          socket =
+            socket
+            |> put_flash(:error, "Failed to place bet: #{inspect(reason)}")
+            |> push_patch(to: socket.assigns.patch)
+      end
 
-      IO.inspect(%{
-        bets: bets
-      }, label: "Placed Bet Data-")
+      # Return :noreply as no state change is necessary for the socket
+      {:noreply, socket}
+  end
 
-
-      # Log the data or send it to the backend
-      #  IO.inspect(%{
-      #    results: results
-      #  }, label: "Placed Bet Data")
-    # Optionally, show a confirmation message or redirect
-    {:noreply, socket}
+  def generate_random_string do
+    prefix = "VALUEBET#"
+    random_bytes = :crypto.strong_rand_bytes(8) # 8 bytes for a random string
+    random_string = Base.encode16(random_bytes) |> String.slice(0..7) # Only take first 8 characters
+    "#{prefix}#{random_string}"
   end
 end

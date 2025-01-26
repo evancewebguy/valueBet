@@ -83,7 +83,7 @@ defmodule ValueBetWeb.Router do
       get "/", PageController, :home
 
       # bet
-      # live "/mybets", HomeLive.Index, :index
+      live "/bet/history", BetHistoryLive.Index, :index
 
 
       #games

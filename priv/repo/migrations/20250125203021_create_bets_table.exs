@@ -3,8 +3,9 @@ defmodule ValueBet.Repo.Migrations.CreateBetsTable do
 
   def change do
       create table(:bets) do
+        add :fixture, :string, null: false
         add :bet_amount, :integer, null: false
-        add :odds, :float, null: false
+        add :odds, :decimal, null: false
         add :selection_choice, :string, null: false
         add :selected_winner, :string, null: false
         add :actual_winner, :string
@@ -15,7 +16,6 @@ defmodule ValueBet.Repo.Migrations.CreateBetsTable do
         timestamps()
       end
 
-      create unique_index(:bets, [:bet_code])
       create index(:bets, [:user_id])
   end
 end

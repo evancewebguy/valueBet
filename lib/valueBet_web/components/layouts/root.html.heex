@@ -115,7 +115,6 @@
         </li>
       <% end %>
 
-
     <% else %>
       <li>
         <.link
@@ -149,7 +148,16 @@
 
       <%= if @current_user do %>
         <div class="flex items-center gap-4 font-semibold leading-6 text-zinc-900">
-            <p> more stuff if user is logged in mm</p>
+          <ul class="relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
+              <li>
+                <.link
+                  href={~p"/bet/history"}
+                  class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+                >
+                  My bets history
+                </.link>
+              </li>
+            </ul>
         </div>
       <% else %>
         <div class="flex items-center gap-4 font-semibold leading-6 text-zinc-900">
