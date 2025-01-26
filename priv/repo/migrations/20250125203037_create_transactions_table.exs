@@ -13,6 +13,5 @@ defmodule ValueBet.Repo.Migrations.CreateTransactionsTable do
     end
 
     create index(:transactions, [:bet_id]) # Index for faster lookups by bet_id
-    create index(:transactions, [:user_id]) # Index for faster lookups by user_id
   end
 end

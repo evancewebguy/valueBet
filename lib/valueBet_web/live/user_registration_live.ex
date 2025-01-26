@@ -58,36 +58,134 @@ defmodule ValueBetWeb.UserRegistrationLive do
     {:ok, socket, temporary_assigns: [form: nil]}
   end
 
+  #new version
+  def handle_event("save", %{"user" => user_params}, socket) do
+    IO.inspect(user_params, label: "User Params")
+
+    case Accounts.register_user(user_params) do
+      {:ok, user} ->
+        IO.inspect(user, label: "Registered User")
+        default_role_id = 1 # Default role: "User"
+        IO.inspect(default_role_id, label: "Default Role ID")
+
+        case Accounts.assign_role_to_user(user.id, default_role_id) do
+          {:ok, _user_role} ->
+            IO.puts("Role assigned successfully.")
+
+            {:ok, _} =
+              Accounts.deliver_user_confirmation_instructions(
+                user,
+                &url(~p"/users/confirm/#{&1}")
+              )
+            IO.puts("Confirmation instructions delivered.")
+
+            changeset = Accounts.change_user_registration(user)
+            {:noreply, socket |> assign(trigger_submit: true) |> assign_form(changeset)}
+
+          {:error, reason} ->
+            IO.inspect(reason, label: "Role Assignment Error")
+            {:noreply,
+             socket
+             |> put_flash(:error, "Could not assign default role: #{reason}")
+             |> assign_form(Accounts.change_user_registration(user))}
+        end
+
+
+      {:error, %Ecto.Changeset{} = changeset} ->
+        IO.inspect(changeset, label: "Registration Changeset Error")
+        {:noreply, socket |> assign(check_errors: true) |> assign_form(changeset)}
+    end
+  end
+
+  #working version
   # def handle_event("save", %{"user" => user_params}, socket) do
+  #   IO.inspect(user_params, label: "User Params")
+
   #   case Accounts.register_user(user_params) do
   #     {:ok, user} ->
-  #       # Assign the default role to the user
-  #       case Accounts.assign_role_to_user(user.id, 1) do
+  #       IO.inspect(user, label: "Registered User")
+  #       default_role_id = 1 # Default role: "User"
+  #       IO.inspect(default_role_id, label: "Default Role ID")
+
+  #       case Accounts.assign_role_to_user(user.id, default_role_id) do
   #         {:ok, _user_role} ->
-  #           # Now assign multiple permissions to the user (e.g., Add Games, Add Admin to Access User)
-  #           # 6 = "view sport games"
-  #           # 7 = "Add Admin to Access User"
-  #           # 8 = "cancel bets on the games"
-  #           # 9 = " view accounts for winnings and losses"
-  #           # 10 = "view history of your bets"
-  #           permissions = [6, 7, 8, 9, 10]
-  #           case Accounts.assign_permissions_to_user(user.id, permissions) do
+  #           IO.puts("Role assigned successfully.")
+
+  #           permissions =
+  #             case default_role_id do
+  #               1 -> [6, 7, 8, 9, 10] # Permissions for "User" role
+  #             end
+  #           IO.inspect(permissions, label: "Assigned Permissions")
+
+  #           case Accounts.assign_permissions_to_role(1, permissions) do
   #             {:ok, _permissions} ->
+  #               IO.puts("Permissions assigned successfully.")
+
   #               {:ok, _} =
   #                 Accounts.deliver_user_confirmation_instructions(
   #                   user,
   #                   &url(~p"/users/confirm/#{&1}")
   #                 )
+  #               IO.puts("Confirmation instructions delivered.")
 
   #               changeset = Accounts.change_user_registration(user)
   #               {:noreply, socket |> assign(trigger_submit: true) |> assign_form(changeset)}
 
   #             {:error, reason} ->
+  #               IO.inspect(reason, label: "Permissions Assignment Error")
   #               {:noreply,
   #                socket
-  #                |> put_flash(:error, "Could not assign permissions: #{reason}")
+  #                |> put_flash(:error, "Could not assign permissions to the role: #{reason}")
   #                |> assign_form(Accounts.change_user_registration(user))}
   #           end
+
+  #         {:error, reason} ->
+  #           IO.inspect(reason, label: "Role Assignment Error")
+  #           {:noreply,
+  #            socket
+  #            |> put_flash(:error, "Could not assign default role: #{reason}")
+  #            |> assign_form(Accounts.change_user_registration(user))}
+  #       end
+
+  #     {:error, %Ecto.Changeset{} = changeset} ->
+  #       IO.inspect(changeset, label: "Registration Changeset Error")
+  #       {:noreply, socket |> assign(check_errors: true) |> assign_form(changeset)}
+  #   end
+  # end
+
+
+  # def handle_event("save", %{"user" => user_params}, socket) do
+  #   case Accounts.register_user(user_params) do
+  #     {:ok, user} ->
+  #       # Assign the default role to the user (e.g., Role ID 1 for "User" or Role ID 2 for "Admin")
+  #       default_role_id = 1 # Change this based on the role you want to assign by default
+  #       case Accounts.assign_role_to_user(user.id, default_role_id) do
+  #         {:ok, _user_role} ->
+  #           # Define permissions based on the role
+  #           permissions =
+  #             case default_role_id do
+  #               1 -> [6, 7, 8, 9, 10]         # Permissions for "User" role
+  #             end
+
+  #             # Assign the permissions to the role
+  #             case Accounts.assign_permissions_to_role(1, permissions) do
+  #               {:ok, _permissions} ->
+  #                 {:ok, _} =
+  #                   Accounts.deliver_user_confirmation_instructions(
+  #                     user,
+  #                     &url(~p"/users/confirm/#{&1}")
+  #                   )
+
+  #                 changeset = Accounts.change_user_registration(user)
+  #                 {:noreply, socket |> assign(trigger_submit: true) |> assign_form(changeset)}
+
+  #               {:error, reason} ->
+  #                 {:noreply,
+  #                 socket
+  #                 |> put_flash(:error, "Could not assign permissions to the role: #{reason}")
+  #                 |> assign_form(Accounts.change_user_registration(user))}
+  #             end
+
 
   #         {:error, reason} ->
   #           {:noreply,
@@ -100,51 +198,6 @@ defmodule ValueBetWeb.UserRegistrationLive do
   #       {:noreply, socket |> assign(check_errors: true) |> assign_form(changeset)}
   #   end
   # end
-
-  def handle_event("save", %{"user" => user_params}, socket) do
-    case Accounts.register_user(user_params) do
-      {:ok, user} ->
-        # Assign the default role to the user (e.g., Role ID 1 for "User" or Role ID 2 for "Admin")
-        default_role_id = 1 # Change this based on the role you want to assign by default
-        case Accounts.assign_role_to_user(user.id, default_role_id) do
-          {:ok, _user_role} ->
-            # Define permissions based on the role
-            permissions =
-              case default_role_id do
-                1 -> [6, 7, 8, 9, 10]         # Permissions for "User" role
-              end
-
-              # Assign the permissions to the role
-              case Accounts.assign_permissions_to_role(1, permissions) do
-                {:ok, _permissions} ->
-                  {:ok, _} =
-                    Accounts.deliver_user_confirmation_instructions(
-                      user,
-                      &url(~p"/users/confirm/#{&1}")
-                    )
-
-                  changeset = Accounts.change_user_registration(user)
-                  {:noreply, socket |> assign(trigger_submit: true) |> assign_form(changeset)}
-
-                {:error, reason} ->
-                  {:noreply,
-                  socket
-                  |> put_flash(:error, "Could not assign permissions to the role: #{reason}")
-                  |> assign_form(Accounts.change_user_registration(user))}
-              end
-
-
-          {:error, reason} ->
-            {:noreply,
-             socket
-             |> put_flash(:error, "Could not assign default role: #{reason}")
-             |> assign_form(Accounts.change_user_registration(user))}
-        end
-
-      {:error, %Ecto.Changeset{} = changeset} ->
-        {:noreply, socket |> assign(check_errors: true) |> assign_form(changeset)}
-    end
-  end
 
   # def handle_event("save", %{"user" => user_params}, socket) do
   #   case Accounts.register_user(user_params) do
