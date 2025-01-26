@@ -12,75 +12,110 @@
     </script>
   </head>
 <body class="h-screen bg-white overflow-y-auto">
+
   <ul class="relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
     <%= if @current_user do %>
-      <li>
-        <.link
-          href={~p"/teams"}
-          class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
-        >
-          Configure Teams
-        </.link>
-      </li>
 
-      <li>
-        <.link
-          href={~p"/leagues"}
-          class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
-        >
-          Configure League
-        </.link>
-      </li>
+      <%= if Enum.any?(@current_user.user_roles, fn role -> role.role_id == 1 end) and
+                Enum.any?(@current_user.user_roles, fn role -> role.role_id == 2 end) do %>
 
-      <li>
-        <.link
-          href={~p"/competitions"}
-          class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
-        >
-          Configure Competition
-        </.link>
-      </li>
+          <!-- <p>User has both roles 1 and 2. - admin</p> -->
 
-      <li>
-        <.link
-          href={~p"/fixtures"}
-          class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
-        >
-          Configure Games
-        </.link>
-      </li>
+        <li>
+          <.link
+            href={~p"/teams"}
+            class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+          >
+            Configure Teams
+          </.link>
+        </li>
 
-      <li>
-        <.link
-          href={~p"/users/list"}
-          class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
-        >
-          Manage Users
-        </.link>
-      </li>
+        <li>
+          <.link
+            href={~p"/leagues"}
+            class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+          >
+            Configure League
+          </.link>
+        </li>
 
-      <li>
-        <.link
-          href={~p"/users/settings"}
-          class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
-        >
-          Settings 
-        </.link>
-      </li>
+        <li>
+          <.link
+            href={~p"/competitions"}
+            class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+          >
+            Configure Competition
+          </.link>
+        </li>
 
-      <li class="text-[0.8125rem] leading-6 text-zinc-900">
-        {@current_user.email}
-      </li>
-      
-      <li>
-        <.link
-          href={~p"/users/log_out"}
-          method="delete"
-          class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
-        >
-          Log out 
-        </.link>
-      </li>
+        <li>
+          <.link
+            href={~p"/fixtures"}
+            class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+          >
+            Configure Games
+          </.link>
+        </li>
+
+        <li>
+          <.link
+            href={~p"/users/list"}
+            class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+          >
+            Manage Users
+          </.link>
+        </li>
+
+        <li>
+          <.link
+            href={~p"/users/settings"}
+            class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+          >
+            Settings 
+          </.link>
+        </li>
+
+        <li class="text-[0.8125rem] leading-6 text-zinc-900">
+          {@current_user.email}
+        </li>
+        
+        <li>
+          <.link
+            href={~p"/users/log_out"}
+            method="delete"
+            class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+          >
+            Log out 
+          </.link>
+        </li>
+      <% else %>
+        <!-- <p>User does not have both roles 1 and 2. - normal user</p> -->
+
+        <li>
+          <.link
+            href={~p"/users/settings"}
+            class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+          >
+            Settings 
+          </.link>
+        </li>
+
+        <li class="text-[0.8125rem] leading-6 text-zinc-900">
+          {@current_user.email}
+        </li>
+        
+        <li>
+          <.link
+            href={~p"/users/log_out"}
+            method="delete"
+            class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+          >
+            Log out 
+          </.link>
+        </li>
+      <% end %>
+
+
     <% else %>
       <li>
         <.link
@@ -101,7 +136,7 @@
     <% end %>
   </ul>
 
-    <header class="px-4 sm:px-6 lg:px-8">
+  <header class="px-4 sm:px-6 lg:px-8">
     <div class="flex items-center justify-between border-b border-zinc-100 py-3 text-sm">
       <div class="flex items-center gap-4">
         <a href="/">

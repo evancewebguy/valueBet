@@ -118,6 +118,11 @@ defmodule ValueBetWeb.HomeLive.Index do
 
   def mount(_params, _session, socket) do
 
+    current_user = socket.assigns[:current_user]
+
+    IO.inspect(current_user, label: "Current User HOMELIVE")
+
+
     fixtures = Enum.map(Fixtures.list_fixtures2(), fn fixture ->
       Map.put(fixture, :odds_home_win, Decimal.to_string(fixture.odds_home_win, :normal) |> String.slice(0..4))
       Map.put(fixture, :odds_draw, Decimal.to_string(fixture.odds_draw, :normal) |> String.slice(0..4))

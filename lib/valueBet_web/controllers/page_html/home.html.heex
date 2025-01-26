@@ -2,6 +2,12 @@
 
 
   <main>
-    <%= live_render(@conn, ValueBetWeb.HomeLive.Index, session: %{"current_user" => @current_user}) %>
+
+    <%= if @current_user do %>
+        <%= live_render(@conn, ValueBetWeb.HomeLive.Index, session: %{"current_user" => @current_user}) %>
+    <% else %>
+          <%= live_render(@conn, ValueBetWeb.HomeLive.Index, session: %{"current_user" => nil}) %>
+    <% end %>
+
   </main>
 
