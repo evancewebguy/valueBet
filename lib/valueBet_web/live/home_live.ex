@@ -111,6 +111,25 @@ defmodule ValueBetWeb.HomeLive.Index do
                 </div>
               </div>
 
+              <!-- <strong>Bet Amount: Ksh 100</strong> -->
+            <form phx-change="update_bet_amount">
+
+              <!-- Bet Amount Input -->
+              <div class="mt-4">
+                <label for="bet_amount" class="block text-sm font-medium">Bet Amount</label>
+                <input
+                  id="bet_amount"
+                  name="amount"
+                  type="number"
+                  placeholder="Enter Bet Amount"
+                  class="w-full mt-1 border rounded px-2 py-1 text-sm"
+                  value={@bet_amount || ""}
+                  min="100"
+                  phx-change="update_bet_amount"
+                />
+              </div>
+              </form>
+
               <!-- Place Bet Button -->
             <div class="mt-4">
               <button
@@ -119,13 +138,10 @@ defmodule ValueBetWeb.HomeLive.Index do
               >
                 Place Bet
               </button>
-              </div>
+            </div>
           <% end %>
         </div>
       </div>
-
-
-
 
     """
   end
@@ -143,7 +159,7 @@ defmodule ValueBetWeb.HomeLive.Index do
     total_odds = 0
 
     # Initialize results as an empty list
-    {:ok, assign(socket, current_user: current_user, fixtures: fixtures, results: [], total_odds: total_odds)}
+    {:ok, assign(socket, current_user: current_user, bet_amount: 100, fixtures: fixtures, results: [], total_odds: total_odds)}
   end
 
   def handle_event("add_to_results", %{"odds" => odds, "fixture" => fixture, "selection" => selection, "winner" => winner}, socket) do
@@ -174,9 +190,36 @@ defmodule ValueBetWeb.HomeLive.Index do
     {:noreply, assign(socket, results: updated_results, total_odds: total_odds)}
   end
 
+
+  @impl true
+  def handle_event("update_bet_amount", %{"amount" => amount}, socket) do
+    # Debugging: Inspect the raw input amount
+    # IO.inspect(amount, label: "Received Amount in update_bet_amount")
+
+    # Parse the input and handle invalid cases
+    bet_amount =
+      case Integer.parse(amount) do
+        {parsed_amount, _} when parsed_amount > 0 -> parsed_amount  # Ensure valid number
+        _ -> nil  # If the value is invalid, you can assign nil
+      end
+
+    # Debugging: Inspect the parsed amount after validation
+    # IO.inspect(bet_amount, label: "Parsed Bet Amount in update_bet_amount")
+
+    # Update the socket with the parsed bet amount (or nil if invalid)
+    {:noreply, assign(socket, :bet_amount, bet_amount)}
+  end
+
   def handle_event("place_bet", _params, socket) do
       # Extract required data
       results = socket.assigns[:results]
+
+      # Extract the updated `bet_amount` from the socket assigns
+      bet_amount = socket.assigns[:bet_amount]
+
+      # Debug to confirm the updated amount
+      # IO.inspect(bet_amount, label: "Updated Bet Amount")
+
 
       # Retrieve current user from socket assigns
       current_user = socket.assigns[:current_user]
@@ -200,7 +243,7 @@ defmodule ValueBetWeb.HomeLive.Index do
       bets = Enum.map(results, fn result ->
         %{
           fixture: result.fixture,
-          bet_amount: 100,
+          bet_amount: bet_amount,
           odds: Decimal.new(result.odds),
           selection_choice: result.selection,
           selected_winner: result.winner,

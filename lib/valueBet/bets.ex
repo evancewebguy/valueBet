@@ -66,26 +66,61 @@ end
   end
 
 
-
   def list_bets_with_filters(filters) do
-    query = from(b in Bet)
+    query = Bet |> where(true)
 
     query =
-      Enum.reduce(filters, query, fn
-        {"bet_code", value}, query when value != "" ->
-          where(query, [b], ilike(b.bet_code, ^"%#{value}%"))
+      if bet_code = Map.get(filters, "bet_code") do
+        from(b in query, where: ilike(b.bet_code, ^"%#{bet_code}%"))
+      else
+        query
+      end
 
-        {"fixture", value}, query when value != "" ->
-          where(query, [b], ilike(b.fixture, ^"%#{value}%"))
+    query =
+      if fixture = Map.get(filters, "fixture") do
+        from(b in query, where: ilike(b.fixture, ^"%#{fixture}%"))
+      else
+        query
+      end
 
-        {"bet_status", value}, query when value != "" ->
-          where(query, [b], b.bet_status == ^value)
+    query =
+      if bet_status = Map.get(filters, "bet_status") do
+        from(b in query, where: b.bet_status == ^bet_status)
+      else
+        query
+      end
 
-        _, query ->
-          query
-      end)
-
+    # Execute the query and fetch the results
     Repo.all(query)
   end
+
+
+  # def list_bets_with_filters(filters) do
+  #   query = Bet |> where(true)
+
+  #   query =
+  #     if bet_code = Map.get(filters, "bet_code") do
+  #       from(b in query, where: ilike(b.bet_code, ^"%#{bet_code}%"))
+  #     else
+  #       query
+  #     end
+
+  #   query =
+  #     if fixture = Map.get(filters, "fixture") do
+  #       from(b in query, where: ilike(b.fixture, ^"%#{fixture}%"))
+  #     else
+  #       query
+  #     end
+
+  #   query =
+  #     if bet_status = Map.get(filters, "bet_status") do
+  #       from(b in query, where: b.bet_status == ^bet_status)
+  #     else
+  #       query
+  #     end
+
+  #   # Execute the query and fetch the results
+  #   Repo.all(query)
+  # end
 
 end
