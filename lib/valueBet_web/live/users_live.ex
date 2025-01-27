@@ -5,7 +5,12 @@ defmodule ValueBetWeb.UsersLive do
 
   def render(assigns) do
     ~H"""
-    <div class="mx-auto max-w-2xl">
+    <div class="m-8 flex flex-col  space-x-4">
+
+      <div class="mt-4">
+        <a href={~p"/users/list"} class="text-blue-600 hover:underline">Back to Users</a>
+      </div>
+
       <%= if @live_action in [:view_permissions, :add_permissions] do %>
         <h2 class="text-2xl font-semibold mb-4">
           <%= if @live_action == :view_permissions, do: "User Permissions", else: "Add Permission" %> : <%= @user.first_name %> <%= @user.last_name %>
@@ -26,53 +31,65 @@ defmodule ValueBetWeb.UsersLive do
             </div>
           <% end %>
         </div>
-         <%= if Enum.any?(@user_permissions, fn perm -> perm.name != "super admin" end) do %>
-          Show content for users who are not Super Admins
-
-        <% else %>
-                    Show Super Admin related content
-        <% end %>
 
 
-        <!-- Check if the user has the 'admin' role -->
-        <%= if Enum.any?(@user.user_roles, fn role -> role.role.name == "admin" end) do %>
-          <div class="mt-4">
-            <%= for permission <- @user_permissions do %>
-              <%= if permission["name"] != "super admin" do %>
-                <!-- If the permission is "super_admin", display it differently -->
-                  <button
-                    class="mb-1 bg-gray-400 text-white px-4 py-1 rounded hover:bg-gray-500"
-                    phx-click="make_super_admin"
-                    phx-value-user-id={@user.id}
-                  >
-                    Make <%= @user.first_name %> Super Admin
-                  </button>
-              <% else %>
-                  <button
-                    class="mb-1 bg-red-400 text-white px-4 py-1 rounded hover:bg-red-500"
-                    phx-click="remove_super_admin"
-                    phx-value-user-id={@user.id}
-                  >
-                    Remove <%= @user.first_name %> from Super Admin
-                  </button>
-              <% end %>
+          <%= if Enum.any?(@current_user.user_roles, fn role -> role.role_id == 1 end) and
+                Enum.any?(@current_user.user_roles, fn role -> role.role_id == 2 end) do %>
+
+              <!-- User has both roles 1 and 2. (admin) -->
+              <!-- Revoke super user rights (admin) -->
+              <!-- User has both roles 1 and 2. (admin) -->
+
+                <%= if Enum.count(@user.user_roles) == 1 and Enum.any?(@user.user_roles, fn role -> role.role.name == "user" end) do %>
+                  <div class="mt-4">
+                    <button
+                      class="mb-1 bg-gray-400 text-white px-4 py-1 rounded hover:bg-gray-500"
+                      phx-click="make_admin"
+                      phx-value-user-id={@user.id}
+                    >
+                      Make <%= @user.first_name %> Admin
+                    </button>
+                  </div>
+                <% end %>
+
+
+                <%= if Enum.count(@user.user_roles) == 2 and Enum.any?(@user.user_roles, fn role -> role.role.name == "admin" end) do %>
+                  <div class="mt-4">
+                    <button
+                      class="mb-1 bg-gray-400 text-white px-4 py-1 rounded hover:bg-gray-500"
+                      phx-click="revoke_admin"
+                      phx-value-user-id={@user.id}
+                    >
+                      Revoke <%= @user.first_name %> Admin Rights
+                    </button>
+
+                    <button
+                      class="mb-1 bg-gray-500 text-white px-4 py-1 rounded hover:bg-gray-600"
+                      phx-click="make_super_admin"
+                      phx-value-user-id={@user.id}
+                    >
+                      Make <%= @user.first_name %> Super Admin
+                    </button>
+
+                    <button
+                      class="mb-1 bg-red-400 text-white px-4 py-1 rounded hover:bg-red-500"
+                      phx-click="remove_super_admin"
+                      phx-value-user-id={@user.id}
+                    >
+                      Remove <%= @user.first_name %> from Super Admin
+                    </button>
+                  </div>
+                <% end %>
+
+
+              <%= if Enum.any?(@current_user.user_permissions, fn permission -> permission.permission_id == 1 end) do %>
+                <!-- <p>Admin User Is a Super Admin</p> -->
+                <!-- make user a super admin, -->
+                <!-- revoke admin access -->
+            <% else %>
+                  Show Admin related content
             <% end %>
-          </div>
-        <% end %>
-
-
-        <%= if Enum.count(@user.user_roles) == 1 and Enum.any?(@user.user_roles, fn role -> role.role.name == "user" end) do %>
-          <div class="mt-4">
-            <button
-              class="mb-1 bg-gray-400 text-white px-4 py-1 rounded hover:bg-gray-500"
-              phx-click="make_admin"
-              phx-value-user-id={@user.id}
-            >
-              Make <%= @user.first_name %> Admin
-            </button>
-          </div>
-        <% end %>
-
+          <% end %>
 
 
         <table class="min-w-full bg-white border border-gray-200">
@@ -102,9 +119,6 @@ defmodule ValueBetWeb.UsersLive do
           </tbody>
         </table>
 
-        <div class="mt-4">
-          <a href={~p"/users/list"} class="text-blue-600 hover:underline">Back to Users</a>
-        </div>
       <% else %>
         <h2 class="text-2xl font-semibold mb-4">Users</h2>
         <table class="min-w-full bg-white border border-gray-200">
@@ -127,7 +141,8 @@ defmodule ValueBetWeb.UsersLive do
                   <% end %>
                 </td>
                 <td class="px-4 py-2 border-b">
-                  <a href={~p"/users/#{user.id}"} class="text-blue-600 hover:underline">View</a>
+                  <a href={~p"/users/#{user.id}"} class="text-blue-600 hover:underline">View </a>|
+                  <a href={~p"/users/#{user.id}/games"} class="text-blue-600 hover:underline">games</a>
                 </td>
               </tr>
             <% end %>
@@ -178,16 +193,20 @@ defmodule ValueBetWeb.UsersLive do
   def handle_event("make_admin", %{"user-id" => user_id}, socket) do
     case Accounts.assign_role_to_user(user_id, 2) do
       :ok ->
-        # IO.inspect(%{
-        #   user_id: user_id,
-        #   role: 2,
-        #   status: "success"
-        # }, label: "User promoted to admin")
-
         {:noreply, assign(socket, :success_message, "User successfully promoted to admin!")}
 
       {:error, reason} ->
         {:noreply, assign(socket, :error_message, "Failed to make user admin: #{reason}")}
+    end
+  end
+
+  def handle_event("revoke_admin", %{"user-id" => user_id}, socket) do
+    case Accounts.revoke_role_to_user(user_id, 2) do
+      :ok ->
+        {:noreply, assign(socket, :success_message, "User Role successfully Revoked!")}
+
+      {:error, reason} ->
+        {:noreply, assign(socket, :error_message, "Failed to revoke user admin: #{reason}")}
     end
   end
 
@@ -218,7 +237,7 @@ defmodule ValueBetWeb.UsersLive do
   end
 
   def handle_event("remove_super_admin", %{"user-id" => user_id}, socket) do
-    case Accounts.remove_permission_from_user(user_id, 2) do
+    case Accounts.remove_permission_from_user(user_id, 1) do
       :ok ->
         {:noreply, assign(socket, :success_message, "User successfully removed from super admin!")}
 

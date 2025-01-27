@@ -46,6 +46,7 @@ defmodule ValueBet.Accounts do
   end
 
 
+
   # //get only super admin users
   def get_user_with_permissions(user_id) do
     # Ensure user_id is an integer (use String.to_integer if needed)
@@ -79,14 +80,6 @@ defmodule ValueBet.Accounts do
         {:error, reason}
     end
   end
-
-
-
-
-
-
-
-
 
 
   def list_users_with_roles do
@@ -198,10 +191,20 @@ defmodule ValueBet.Accounts do
   """
   # def get_user!(id), do: Repo.get!(User, id)
 
+  # def get_user(user_id) do
+  #   Repo.get(ValueBet.Accounts.User, user_id)
+  #   |> Repo.preload([:user_roles, user_roles: :role])  # Preload user_roles and the associated role
+  # end
+
   def get_user(user_id) do
     Repo.get(ValueBet.Accounts.User, user_id)
-    |> Repo.preload([:user_roles, user_roles: :role])  # Preload user_roles and the associated role
+    |> Repo.preload([
+      :user_roles,                # Preload user_roles
+      user_roles: :role,          # Preload roles within user_roles
+      user_permissions: :permission # Preload user_permissions and their associated permission
+    ])
   end
+
 
 
   ## User registration
@@ -238,6 +241,18 @@ defmodule ValueBet.Accounts do
     |> UserRole.changeset(%{user_id: user_id, role_id: role_id})
     |> Repo.insert()
   end
+
+  def revoke_role_to_user(user_id, role_id) do
+    case Repo.get_by(UserRole, user_id: user_id, role_id: role_id) do
+      nil ->
+        {:error, "User role not found"}
+
+      user_role ->
+        Repo.delete(user_role)
+    end
+  end
+
+
 
   # //make user a super admin
   def assign_permission_to_user(user_id, permission_id) do

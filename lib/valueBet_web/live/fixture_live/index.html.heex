@@ -1,47 +1,50 @@
-<.header>
-  Listing Fixtures
-  <:actions>
-    <.link patch={~p"/fixtures/new"}>
-      <.button>New Fixture</.button>
-    </.link>
-  </:actions>
-</.header>
 
-<.table
-  id="fixtures"
-  rows={@streams.fixtures}
-  row_click={fn {_id, fixture} -> JS.navigate(~p"/fixtures/#{fixture}") end}
->
-  <:col :let={{_id, fixture}} label="Home Team">{fixture.home_team.name}</:col>
-  <:col :let={{_id, fixture}} label="Away Team">{fixture.away_team.name}</:col>
-  <:col :let={{_id, fixture}} label="Fixture date">{fixture.fixture_date}</:col>
-  <:col :let={{_id, fixture}} label="Odds home win">{fixture.odds_home_win}</:col>
-  <:col :let={{_id, fixture}} label="Odds away win">{fixture.odds_away_win}</:col>
-  <:col :let={{_id, fixture}} label="Odds draw">{fixture.odds_draw}</:col>
-  <:col :let={{_id, fixture}} label="Status">{fixture.status}</:col>
-  <:action :let={{_id, fixture}}>
-    <div class="sr-only">
-      <.link navigate={~p"/fixtures/#{fixture}"}>Show</.link>
-    </div>
-    <.link patch={~p"/fixtures/#{fixture}/edit"}>Edit</.link>
-  </:action>
-  <:action :let={{id, fixture}}>
-    <.link
-      phx-click={JS.push("delete", value: %{id: fixture.id}) |> hide("##{id}")}
-      data-confirm="Are you sure?"
+  <div class="m-8 flex flex-col  space-x-4">
+    <.header>
+      Listing Fixtures
+      <:actions>
+        <.link patch={~p"/fixtures/new"}>
+          <.button>New Fixture </.button>
+        </.link>
+      </:actions>
+    </.header>
+
+    <.table
+      id="fixtures"
+      rows={@streams.fixtures}
+      row_click={fn {_id, fixture} -> JS.navigate(~p"/fixtures/#{fixture}") end}
     >
-      Delete
-    </.link>
-  </:action>
-</.table>
+      <:col :let={{_id, fixture}} label="Home Team">{fixture.home_team.name}</:col>
+      <:col :let={{_id, fixture}} label="Away Team">{fixture.away_team.name}</:col>
+      <:col :let={{_id, fixture}} label="Fixture date">{fixture.fixture_date}</:col>
+      <:col :let={{_id, fixture}} label="Odds home win">{fixture.odds_home_win}</:col>
+      <:col :let={{_id, fixture}} label="Odds away win">{fixture.odds_away_win}</:col>
+      <:col :let={{_id, fixture}} label="Odds draw">{fixture.odds_draw}</:col>
+      <:col :let={{_id, fixture}} label="Status">{fixture.status}</:col>
+      <:action :let={{_id, fixture}}>
+        <div class="sr-only">
+          <.link navigate={~p"/fixtures/#{fixture}"}>Show</.link>
+        </div>
+        <.link patch={~p"/fixtures/#{fixture}/edit"}>Edit</.link>
+      </:action>
+      <:action :let={{id, fixture}}>
+        <.link
+          phx-click={JS.push("delete", value: %{id: fixture.id}) |> hide("##{id}")}
+          data-confirm="Are you sure?"
+        >
+          Delete
+        </.link>
+      </:action>
+    </.table>
 
-<.modal :if={@live_action in [:new, :edit]} id="fixture-modal" show on_cancel={JS.patch(~p"/fixtures")}>
-  <.live_component
-    module={ValueBetWeb.FixtureLive.FormComponent}
-    id={@fixture.id || :new}
-    title={@page_title}
-    action={@live_action}
-    fixture={@fixture}
-    patch={~p"/fixtures"}
-  />
-</.modal>
+    <.modal :if={@live_action in [:new, :edit]} id="fixture-modal" show on_cancel={JS.patch(~p"/fixtures")}>
+      <.live_component
+        module={ValueBetWeb.FixtureLive.FormComponent}
+        id={@fixture.id || :new}
+        title={@page_title}
+        action={@live_action}
+        fixture={@fixture}
+        patch={~p"/fixtures"}
+      />
+    </.modal>
+  </div>

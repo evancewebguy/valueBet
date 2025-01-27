@@ -21,73 +21,139 @@
 
           <!-- <p>User has both roles 1 and 2. - admin</p> -->
 
-        <li>
-          <.link
-            href={~p"/teams"}
-            class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
-          >
-            Configure Teams
-          </.link>
-        </li>
+          <%= if Enum.any?(@current_user.user_permissions, fn permission -> permission.permission_id == 1 end) do %>
+            <!-- <p>Admin User Is a Super Admin</p> -->
+            
+            <li>
+              <.link
+                href={~p"/teams"}
+                class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+              >
+                Configure Teams
+              </.link>
+            </li>
 
-        <li>
-          <.link
-            href={~p"/leagues"}
-            class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
-          >
-            Configure League
-          </.link>
-        </li>
+            <li>
+              <.link
+                href={~p"/leagues"}
+                class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+              >
+                Configure League
+              </.link>
+            </li>
 
-        <li>
-          <.link
-            href={~p"/competitions"}
-            class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
-          >
-            Configure Competition
-          </.link>
-        </li>
+            <li>
+              <.link
+                href={~p"/competitions"}
+                class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+              >
+                Configure Competition
+              </.link>
+            </li>
 
-        <li>
-          <.link
-            href={~p"/fixtures"}
-            class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
-          >
-            Configure Games
-          </.link>
-        </li>
+            <li>
+              <.link
+                href={~p"/fixtures"}
+                class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+              >
+                Configure Games
+              </.link>
+            </li>
 
-        <li>
-          <.link
-            href={~p"/users/list"}
-            class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
-          >
-            Manage Users
-          </.link>
-        </li>
+            <li>
+              <.link
+                href={~p"/users/list"}
+                class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+              >
+                Manage Users
+              </.link>
+            </li>
 
-        <li>
-          <.link
-            href={~p"/users/settings"}
-            class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
-          >
-            Settings 
-          </.link>
-        </li>
+            <li>
+              <.link
+                href={~p"/users/settings"}
+                class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+              >
+                Settings 
+              </.link>
+            </li>
 
-        <li class="text-[0.8125rem] leading-6 text-zinc-900">
-          {@current_user.email}
-        </li>
-        
-        <li>
-          <.link
-            href={~p"/users/log_out"}
-            method="delete"
-            class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
-          >
-            Log out 
-          </.link>
-        </li>
+            <li class="text-[0.8125rem] leading-6 text-zinc-900">
+              {@current_user.email}
+            </li>
+            
+            <li>
+              <.link
+                href={~p"/users/log_out"}
+                method="delete"
+                class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+              >
+                Log out 
+              </.link>
+            </li>
+          <% else %>
+            <!-- <p>Admin User Is a normal Admin</p> -->
+
+            <li>
+              <.link
+                href={~p"/teams"}
+                class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+              >
+                Configure Teams
+              </.link>
+            </li>
+
+            <li>
+              <.link
+                href={~p"/leagues"}
+                class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+              >
+                Configure League
+              </.link>
+            </li>
+
+            <li>
+              <.link
+                href={~p"/competitions"}
+                class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+              >
+                Configure Competition
+              </.link>
+            </li>
+
+            <li>
+              <.link
+                href={~p"/users/list"}
+                class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+              >
+                Manage Users
+              </.link>
+            </li>
+
+            <li>
+              <.link
+                href={~p"/users/settings"}
+                class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+              >
+                Settings 
+              </.link>
+            </li>
+
+            <li class="text-[0.8125rem] leading-6 text-zinc-900">
+              {@current_user.email}
+            </li>
+            
+            <li>
+              <.link
+                href={~p"/users/log_out"}
+                method="delete"
+                class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+              >
+                Log out 
+              </.link>
+            </li>
+
+          <% end %>
       <% else %>
         <!-- <p>User does not have both roles 1 and 2. - normal user</p> -->
 
@@ -167,9 +233,8 @@
     </div>
   </header>
 
-  <div class="overflow-y-auto h-screen">
+  <div>
     {@inner_content}
   </div>
 </body>
-
 </html>

@@ -16,8 +16,7 @@ defmodule ValueBet.Accounts.UserPermission do
     user_permission
     |> cast(attrs, [:user_id, :permission_id])
     |> validate_required([:user_id, :permission_id])
-    |> unique_constraint([:user_id, :permission_id])
-    |> foreign_key_constraint(:permission_id, name: "user_permissions_permission_id_fkey")
-    |> foreign_key_constraint(:user_id, name: "user_permissions_user_id_fkey")
+    |> foreign_key_constraint(:permission_id)
+    |> foreign_key_constraint(:user_id)
   end
 end

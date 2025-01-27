@@ -79,6 +79,9 @@ defmodule ValueBetWeb.Router do
       live "/users/:id/add", UsersLive, :add_permissions
       live "/users/:id/remove", UsersLive, :remove_permissions
 
+      live "/users/:id/games", UserGamesLive
+
+
       # Authenticated route for home
       get "/", PageController, :home
 

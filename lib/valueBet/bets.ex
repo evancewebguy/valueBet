@@ -64,4 +64,28 @@ end
   def get_bet!(id) do
     Repo.get!(Bet, id)
   end
+
+
+
+  def list_bets_with_filters(filters) do
+    query = from(b in Bet)
+
+    query =
+      Enum.reduce(filters, query, fn
+        {"bet_code", value}, query when value != "" ->
+          where(query, [b], ilike(b.bet_code, ^"%#{value}%"))
+
+        {"fixture", value}, query when value != "" ->
+          where(query, [b], ilike(b.fixture, ^"%#{value}%"))
+
+        {"bet_status", value}, query when value != "" ->
+          where(query, [b], b.bet_status == ^value)
+
+        _, query ->
+          query
+      end)
+
+    Repo.all(query)
+  end
+
 end

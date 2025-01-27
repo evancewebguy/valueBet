@@ -5,19 +5,63 @@ defmodule ValueBetWeb.BetHistoryLive.Index do
 
   def render(assigns) do
     ~H"""
-        <h2 class="text-2xl font-semibold mb-4">Bet History</h2>
+      <div class="m-8 flex flex-col  space-x-4">
+        <div>
+          <h2 class="text-2xl font-semibold mb-4">Bet History</h2>
+        </div>
         <table class="min-w-full bg-white border border-gray-200">
           <thead>
             <tr>
-              <th class="px-4 py-2 text-left border-b">Bet Code</th>
-              <th class="px-4 py-2 text-left border-b">Fixture</th>
-              <th class="px-4 py-2 text-left border-b">Bet Status</th>
-              <th class="px-4 py-2 text-left border-b">Bet Time</th>
+              <th class="px-4 py-2 text-left border-b">
+                Bet Code
+                <input
+                  type="text"
+                  placeholder="Filter Bet Code"
+                  class="w-full mt-1 border rounded px-2 py-1 text-sm"
+                  phx-change="filter"
+                  phx-debounce="500"
+                  phx-target="@myself"
+                  phx-value-field="bet_code"
+                />
+              </th>
+              <th class="px-4 py-2 text-left border-b">
+                Fixture
+                <input
+                  type="text"
+                  placeholder="Filter Fixture"
+                  class="w-full mt-1 border rounded px-2 py-1 text-sm"
+                  phx-change="filter"
+                  phx-debounce="500"
+                  phx-value-field="fixture"
+                  phx-value={@filters["fixture"] || ""}
+                />
+
+              </th>
+              <th class="px-4 py-2 text-left border-b">
+                Bet Status
+                <select
+                  class="w-full mt-1 border rounded px-2 py-1 text-sm"
+                  phx-change="filter"
+                  phx-debounce="500"
+                  phx-value-field="bet_status"
+                  phx-value={@filters["bet_status"] || ""}
+                >
+                  <option value="">All</option>
+                  <option value="pending">Pending</option>
+                  <option value="cancelled">Cancelled</option>
+                  <option value="won">Won</option>
+                  <option value="lost">Lost</option>
+                </select>
+
+              </th>
+              <th class="px-4 py-2 text-left border-b">
+                Bet Time
+              </th>
               <th class="px-4 py-2 text-left border-b">Action</th>
             </tr>
           </thead>
           <tbody>
-           <%= for bet <- @bet_history do %>
+            <%= for bet <- @bet_history do %>
               <tr>
                 <td class="px-4 py-2 border-b"><%= "#{bet.bet_code}" %></td>
                 <td class="px-4 py-2 border-b"><%= bet.fixture %></td>
@@ -30,7 +74,7 @@ defmodule ValueBetWeb.BetHistoryLive.Index do
                 </td>
                 <td class="px-4 py-2 border-b">
                   <%= if bet.bet_status == "pending" do %>
-                    <button class="cancel-button" phx-click="cancel_bet" phx-value-bet-id={bet.id }>Cancel</button>
+                    <button class="cancel-button" phx-click="cancel_bet" phx-value-bet-id={bet.id}>Cancel</button>
                   <% else %>
                     <span>Bet ongoing/ended</span>
                   <% end %>
@@ -39,6 +83,8 @@ defmodule ValueBetWeb.BetHistoryLive.Index do
             <% end %>
           </tbody>
         </table>
+
+      </div>
     """
   end
 
@@ -47,14 +93,14 @@ defmodule ValueBetWeb.BetHistoryLive.Index do
       current_user = socket.assigns[:current_user]
 
       # Debugging: Inspect current user
-      IO.inspect(current_user.id, label: "Current User ID History")
+      # IO.inspect(current_user.id, label: "Current User ID History")
 
       user_id = current_user.id
       bet_history = Bets.list_bets_for_user(user_id)
 
       # IO.inspect(bet_history, label: "ALL BETS History")
 
-      {:ok, assign(socket, current_user: current_user, bet_history: bet_history)}
+      {:ok, assign(socket, current_user: current_user, bet_history: bet_history,filters: %{})}
   end
 
 
@@ -88,5 +134,24 @@ defmodule ValueBetWeb.BetHistoryLive.Index do
     {:noreply, socket}
   end
 
+  def handle_event("filter", params, socket) do
+
+    IO.inspect(params, label: "Filter Params")
+
+    field = Map.get(params, "phx-value-field", "")
+    value = Map.get(params, "value", "")
+
+    IO.inspect(field, label: "Current field")
+
+    # Update the filters
+    filters = Map.put(socket.assigns.filters || %{}, field, value)
+
+    IO.inspect(filters, label: "BET FILTERS")
+
+    # Fetch the filtered data
+    bet_history = Bets.list_bets_with_filters(filters)
+
+    {:noreply, assign(socket, bet_history: bet_history, filters: filters)}
+  end
 
 end
