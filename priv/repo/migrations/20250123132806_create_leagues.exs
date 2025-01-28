@@ -5,6 +5,9 @@ defmodule ValueBet.Repo.Migrations.CreateLeagues do
     create table(:leagues) do
       add :name, :string
 
+      add :deleted_at, :utc_datetime, null: true
+
+
       timestamps(type: :utc_datetime)
     end
   end

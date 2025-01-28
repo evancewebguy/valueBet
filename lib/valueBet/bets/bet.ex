@@ -10,9 +10,11 @@ defmodule ValueBet.Bets.Bet do
       field :selection_choice, :string
       field :selected_winner, :string
       field :actual_winner, :string
-      field :bet_status, :string, default: "pending" # e.g., "won", "lost", "pending"
+      field :bet_status, Ecto.Enum, values: [:upcoming, :cancelled, :won, :lost], default: :upcoming
       field :bet_code, :string
       field :user_id, :integer
+      field :deleted_at, :utc_datetime
+
 
 
       # belongs_to :user, ValueBet.User

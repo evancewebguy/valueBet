@@ -5,6 +5,8 @@ defmodule ValueBet.Accounts.UserRole do
   schema "user_roles" do
     belongs_to :user, ValueBet.Accounts.User
     belongs_to :role, ValueBet.Accounts.Role
+    field :deleted_at, :utc_datetime
+
 
     timestamps()
   end

@@ -8,6 +8,8 @@ defmodule ValueBet.Fixtures.Fixture do
     field :odds_away_win, :decimal
     field :odds_draw, :decimal
     field :status, :string
+    field :deleted_at, :utc_datetime
+
     belongs_to :home_team, ValueBet.Teams.Team
     belongs_to :away_team, ValueBet.Teams.Team
     belongs_to :competition, ValueBet.Competitions.Competition

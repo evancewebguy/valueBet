@@ -4,6 +4,7 @@ defmodule ValueBet.Lueague.League do
 
   schema "leagues" do
     field :name, :string
+    field :deleted_at, :utc_datetime
 
     timestamps(type: :utc_datetime)
   end

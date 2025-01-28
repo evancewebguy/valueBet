@@ -5,13 +5,11 @@ defmodule ValueBet.Accounts.Role do
   schema "roles" do
     field :name, :string
     field :description, :string
-
+    field :deleted_at, :utc_datetime
 
     has_many :user_roles, ValueBet.Accounts.UserRole
     has_many :role_permissions, ValueBet.Accounts.RolePermission
     many_to_many :permissions, ValueBet.Accounts.Permission, join_through: ValueBet.Accounts.RolePermission
-
-    # has_many :permissions, through: [:role_permissions, :permission]
 
     timestamps()
   end

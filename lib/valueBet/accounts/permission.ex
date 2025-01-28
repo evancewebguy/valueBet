@@ -5,6 +5,7 @@ defmodule ValueBet.Accounts.Permission do
   schema "permissions" do
     field :name, :string
     field :description, :string
+    field :deleted_at, :utc_datetime
 
     has_many :role_permissions, ValueBet.Accounts.RolePermission
     many_to_many :roles, ValueBet.Accounts.Role, join_through: ValueBet.Accounts.RolePermission

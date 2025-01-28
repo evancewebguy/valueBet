@@ -7,7 +7,7 @@ defmodule ValueBet.Repo.Migrations.CreateTransactionsTable do
       add :bet_code, :string, null: false # Unique identifier for the bet
       add :amount, :integer, null: false # Amount for the transaction
       add :transaction_type, :string, null: false # E.g., "debit" or "credit"
-      add :deleted_at, :utc_datetime # Nullable field for soft deletion
+      add :deleted_at, :utc_datetime, null: true
 
       timestamps()
     end

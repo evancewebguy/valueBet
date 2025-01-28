@@ -5,6 +5,8 @@ defmodule ValueBet.Repo.Migrations.CreateUserPermissions do
     create table(:user_permissions) do
       add :user_id, references(:users, on_delete: :delete_all), null: false
       add :permission_id, references(:permissions, on_delete: :delete_all), null: false
+      add :deleted_at, :utc_datetime, null: true
+
       timestamps()
     end
 

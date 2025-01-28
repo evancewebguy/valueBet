@@ -6,11 +6,42 @@ defmodule ValueBet.Accounts do
   import Ecto.Query, warn: false
   alias ValueBet.Repo
 
-  alias ValueBet.Accounts.{User, UserToken, UserNotifier, Permission, RolePermission, UserRole, UserPermission}
+  alias ValueBet.Accounts.{User, UserToken, UserNotifier, Permission, RolePermission, UserRole, UserPermission,Role}
 
   ## Database getters
 
-    @doc """
+  @doc """
+    create role
+  """
+  def create_role!(attrs) do
+    %Role{}
+    |> Role.changeset(attrs)
+    |> Repo.insert()
+  end
+
+
+  @doc """
+  Creates a permission.
+  """
+  def create_permission!(attrs) do
+    %Permission{}
+    |> Permission.changeset(attrs)
+    |> Repo.insert!()
+  end
+
+
+  @doc """
+  Creates a role-permission association.
+  """
+  def create_role_permission!(attrs) do
+    %RolePermission{}
+    |> RolePermission.changeset(attrs)
+    |> Repo.insert!()
+  end
+
+
+
+  @doc """
   Gets all users.
 
   ## Examples

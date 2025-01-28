@@ -6,6 +6,7 @@ defmodule ValueBet.Accounts.UserPermission do
   schema "user_permissions" do
     belongs_to :user, ValueBet.Accounts.User
     belongs_to :permission, ValueBet.Accounts.Permission
+    field :deleted_at, :utc_datetime
 
 
     timestamps()

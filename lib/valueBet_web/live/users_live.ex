@@ -210,8 +210,6 @@ defmodule ValueBetWeb.UsersLive do
     end
   end
 
-
-
   def handle_event("make_super_admin", %{"user-id" => user_id}, socket) do
     #makes user a super admin
     case Accounts.assign_permission_to_user(user_id, 1) do
